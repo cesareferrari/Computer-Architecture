@@ -83,15 +83,15 @@ class CPU:
 
             if ir == 0b10000010: # LDI R0,8
                 # put 8 in register 0
-                register_index = self.ram_read(self.pc + 1)
-                number_to_save = self.ram_read(self.pc + 2)
-                self.reg[register_index] = number_to_save
+                operand_a = self.ram_read(self.pc + 1)
+                operand_b = self.ram_read(self.pc + 2)
+                self.reg[operand_a] = operand_b
                 self.pc += 3
 
             if ir == int(0b01000111): # PRN R0
                 # print register 0
-                register_index = self.ram_read(self.pc + 1)
-                print(self.reg[register_index])
+                operand_a = self.ram_read(self.pc + 1)
+                print(self.reg[operand_a])
                 self.pc += 2
             
             if ir == int(0b00000001): # HLT

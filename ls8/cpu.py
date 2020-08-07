@@ -11,6 +11,9 @@ class CPU:
         self.reg = [None] * 8
         self.pc = 0
 
+        self.HLT = 0b00000001
+        
+
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
     def ram_read(self, mar):
@@ -94,6 +97,7 @@ class CPU:
                 print(self.reg[operand_a])
                 self.pc += 2
             
-            if ir == int(0b00000001): # HLT
+            # if ir == int(0b00000001): # HLT
+            if ir == self.HLT:
                 running = False
 

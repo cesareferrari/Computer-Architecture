@@ -14,6 +14,7 @@ class CPU:
         self.HLT = 0b00000001
         self.LDI = 0b10000010
 
+
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
     def ram_read(self, mar):

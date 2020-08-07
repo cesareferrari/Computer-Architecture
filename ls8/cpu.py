@@ -12,7 +12,7 @@ class CPU:
         self.pc = 0
 
         self.HLT = 0b00000001
-        
+        self.LDI = 0b10000010
 
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
@@ -84,7 +84,7 @@ class CPU:
             # ir: instruction register
             ir = self.ram_read(self.pc)
 
-            if ir == 0b10000010: # LDI R0,8
+            if ir == self.LDI: # LDI R0,8
                 # put 8 in register 0
                 operand_a = self.ram_read(self.pc + 1)
                 operand_b = self.ram_read(self.pc + 2)

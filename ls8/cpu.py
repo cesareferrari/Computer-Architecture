@@ -15,6 +15,7 @@ class CPU:
         self.HLT = 0b00000001
         self.LDI = 0b10000010
         self.PRN = 0b01000111
+        self.MUL = 0b10100010
 
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
@@ -41,6 +42,14 @@ class CPU:
             0b00001000, # 8
             0b01000111, # PRN R0
             0b00000000, # R0
+            0b10000010, # LDI R1,9
+            0b00000001,
+            0b00001001,
+            0b10100010, # MUL R0,R1
+            0b00000000,
+            0b00000001,
+            0b01000111, # PRN R0
+            0b00000000,
             0b00000001, # HLT
         ]
 
@@ -98,6 +107,11 @@ class CPU:
                 # print register 0
                 operand_a = self.ram_read(self.pc + 1)
                 print(self.reg[operand_a])
+
+            if ir == self.MUL:
+                operand_a = self.ram_read(self.pc + 1)
+                operand_b = self.ram_read(self.pc + 2)
+                self.reg[operand_a] *= self.reg[operand_b]
             
             # if ir == int(0b00000001): # HLT
             if ir == self.HLT:

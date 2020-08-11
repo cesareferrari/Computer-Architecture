@@ -14,7 +14,7 @@ class CPU:
 
         self.HLT = 0b00000001
         self.LDI = 0b10000010
-
+        self.PRN = 0b01000111
 
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
@@ -82,24 +82,26 @@ class CPU:
         """Run the CPU."""
         running = True
 
+
         while running:
             # ir: instruction register
             ir = self.ram_read(self.pc)
+            num_operands = ir >> 6  # extract # of operands
 
             if ir == self.LDI: # LDI R0,8
                 # put 8 in register 0
                 operand_a = self.ram_read(self.pc + 1)
                 operand_b = self.ram_read(self.pc + 2)
                 self.reg[operand_a] = operand_b
-                self.pc += 3
 
-            if ir == int(0b01000111): # PRN R0
+            if ir == self.PRN: # PRN R0
                 # print register 0
                 operand_a = self.ram_read(self.pc + 1)
                 print(self.reg[operand_a])
-                self.pc += 2
             
             # if ir == int(0b00000001): # HLT
             if ir == self.HLT:
                 running = False
+
+            self.pc += num_operands + 1  # + 1 for the command itself
 

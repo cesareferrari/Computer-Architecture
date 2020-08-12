@@ -11,22 +11,6 @@ ADD            =  0b10000110  # command 6
 ## we move our PC to step through memory, and execute commands
 
 memory = [
-    PRINT_TIM, 
-    PRINT_TIM,
-    PRINT_NUM,
-    99,
-    SAVE, 
-    42,  # number to save
-    2,   # register to save into R2
-    SAVE, 
-    42,  # number to save
-    3,   # register to save into R3
-    ADD, # R2 + R3 and save in R2
-    2,   # register index
-    3,   # register index
-    PRINT_REGISTER,
-    2,
-    HALT,       # <--- PC
           ]
 
 running = True

@@ -23,6 +23,7 @@ class CPU:
         self.PRN  = 0b01000111
         self.MUL  = 0b10100010
         self.PUSH = 0b01000101
+        self.POP  = 0b01000110
 
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
@@ -126,6 +127,17 @@ class CPU:
                 # copy into stack
                 sp = self.reg[7]
                 self.ram[sp] = number_to_push
+
+            if ir == self.POP:
+                sp = self.reg[7]
+                # get value of last position of sp
+                popped_value = self.ram[sp]
+                # get register number
+                register_number = self.ram[self.pc + 1]
+                # copy into a register
+                self.reg[register_number] = popped_value
+                # increment sp
+                self.reg[7] += 1
             
             # if ir == int(0b00000001): # HLT
             if ir == self.HLT:

@@ -7,6 +7,7 @@ SAVE           =  0b10000100
 PRINT_REGISTER =  0b01000101
 ADD            =  0b10000110  # command 6
 PUSH           =  0b01000111  # 1 operand, command 7
+POP            =  0b01001000  # 1 operand, command 7
 
 
 # Rules of our game
@@ -85,9 +86,19 @@ while running:
         # get value from register
         number_to_push = registers[register_number]
         # copy into stack
-        sp = register[7]
+        sp = registers[7]
         memory[sp] = number_to_push
 
+    if command == POP:
+        sp = registers[7]
+        # get value of last position of sp
+        popped_value = memory[sp]
+        # get register number
+        register_number = memory[pc + 1]
+        # copy into a register
+        registers[register_number] = popped_value
+        # increment sp
+        registers[7] += 1
 
 
     if command == HALT:

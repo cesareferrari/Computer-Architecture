@@ -24,6 +24,8 @@ class CPU:
         self.MUL  = 0b10100010
         self.PUSH = 0b01000101
         self.POP  = 0b01000110
+        self.CALL = 0b01011001
+        self.RET  = 0b00011010
 
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
@@ -138,8 +140,43 @@ class CPU:
                 self.reg[register_number] = popped_value
                 # increment sp
                 self.reg[7] += 1
+
+
+            if ir == self.CALL:
+                
+                # remember where to return to
+                ## get address of next instruction
+                next_instruction_address = self.pc + 2
+                ## push onto the stack
+                ### decrement SP
+                self.reg[7] -= 1
+                ### put on stack at the SP
+                sp = self.reg[7]
+                self.ram[sp] = next_instruction_address
+                
+                # call the subroutine (aka function)
+                ## get address from given register
+                ### get the register address/number
+                #### this is inside memory, at pc + 1
+                reg_address = self.ram[self.pc + 1]
+                ### look inside that register
+                address_to_jump_to = self.reg[reg_address]
+                ## set pc to that address
+                self.pc = address_to_jump_to
+
+
+            if ir == self.RET:
+                # pop value from top of stack
+                ## use SP to get value
+                sp = self.reg[7]
+                return_address = self.ram[sp]
+                ## increment SP
+                self.reg[7] += 1
+
+                # set PC to that value
+                self.pc = return_address
+
             
-            # if ir == int(0b00000001): # HLT
             if ir == self.HLT:
                 running = False
 

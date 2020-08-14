@@ -14,10 +14,6 @@ class CPU:
         # pc: program counter
         self.pc = 0
 
-        # initialize stack pointer
-        # self.sp = 
-
-
         self.HLT  = 0b00000001
         self.LDI  = 0b10000010
         self.PRN  = 0b01000111
@@ -117,10 +113,12 @@ class CPU:
                 operand_b = self.ram_read(self.pc + 2)
                 self.reg[operand_a] *= self.reg[operand_b]
 
+            # Push the value in the given register on the stack.
+            # sp: stack pointer
             if ir == self.PUSH:
                 # decrement stack pointer
                 self.reg[7] -= 1
-                # look ahead in memory to get register number
+                # look ahead in ram to get given register number
                 register_number = self.ram_read(self.pc + 1)
                 # get value from register 
                 number_to_push = self.reg[register_number]
@@ -128,13 +126,15 @@ class CPU:
                 sp = self.reg[7]
                 self.ram[sp] = number_to_push
 
+            # Pop the value at the top of the stack into the given register
+            # sp: stack pointer
             if ir == self.POP:
                 sp = self.reg[7]
                 # get value of last position of sp
                 popped_value = self.ram[sp]
                 # get register number
                 register_number = self.ram[self.pc + 1]
-                # copy into a register
+                # copy into the register
                 self.reg[register_number] = popped_value
                 # increment sp
                 self.reg[7] += 1

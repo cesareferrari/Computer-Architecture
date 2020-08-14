@@ -20,8 +20,8 @@ class CPU:
         self.MUL  = 0b10100010
         self.PUSH = 0b01000101
         self.POP  = 0b01000110
-        self.CALL = 0b01011001
-        self.RET  = 0b00011010
+        self.CALL = 0b01010000
+        self.RET  = 0b00010001
 
     # accept the address to read and return the value stored there
     # mar: Memory address register, the address that is being read
@@ -97,6 +97,7 @@ class CPU:
         while running:
             # ir: instruction register
             ir = self.ram_read(self.pc)
+            print('ir:', bin(ir))
             num_operands = ir >> 6  # extract # of operands
 
             if ir == self.LDI: # LDI R0,8
@@ -143,42 +144,48 @@ class CPU:
 
 
             if ir == self.CALL:
-                
                 # remember where to return to
-                ## get address of next instruction
-                next_instruction_address = self.pc + 2
+                ## get address of next instruction,
+                ## the one we would run if we didn't have CALL
+                ## It's at pc + 2
+                next_instruction_address = self.ram[self.pc + 2]
                 ## push onto the stack
-                ### decrement SP
+                ### decrement stack pointer sp
                 self.reg[7] -= 1
-                ### put on stack at the SP
+                ### put on stack at the sp
                 sp = self.reg[7]
                 self.ram[sp] = next_instruction_address
-                
-                # call the subroutine (aka function)
+
+
+                # call the subroutine (function)
                 ## get address from given register
-                ### get the register address/number
-                #### this is inside memory, at pc + 1
+                ### get the register number
                 reg_address = self.ram[self.pc + 1]
                 ### look inside that register
                 address_to_jump_to = self.reg[reg_address]
                 ## set pc to that address
                 self.pc = address_to_jump_to
-
+                
 
             if ir == self.RET:
                 # pop value from top of stack
-                ## use SP to get value
+                ## use sp to get value
                 sp = self.reg[7]
                 return_address = self.ram[sp]
-                ## increment SP
+                ## increment sp
                 self.reg[7] += 1
 
-                # set PC to that value
+                # set pc to that value
                 self.pc = return_address
 
-            
+
             if ir == self.HLT:
                 running = False
 
-            self.pc += num_operands + 1  # + 1 for the command itself
+
+            # bit shifting, bit masking
+            command_sets_pc_directly = ((ir >> 4) & 0b0001) == 1
+
+            if not command_sets_pc_directly:
+                self.pc += num_operands + 1  # + 1 for the command itself
 

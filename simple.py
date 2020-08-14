@@ -8,6 +8,8 @@ PRINT_REGISTER =  0b01000101
 ADD            =  0b10000110  # command 6
 PUSH           =  0b01000111  # 1 operand, command 7
 POP            =  0b01001000  # 1 operand, command 7
+CALL           =  0b01001001
+RET            =  0b00001010
 
 
 # Rules of our game
@@ -99,6 +101,18 @@ while running:
         registers[register_number] = popped_value
         # increment sp
         registers[7] += 1
+
+
+    if command == CALL:
+        # remember where to return to
+        ## get address of next instruction
+        memory[pc + 1]
+        ## push onto the stack
+
+        # call the subroutine (function)
+        ## get address from given register
+        ## set pc to that address
+
 
 
     if command == HALT:

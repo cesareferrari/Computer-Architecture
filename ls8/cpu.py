@@ -64,8 +64,8 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+        if op == self.MUL:
+            self.reg[reg_a] *= self.reg[reg_b]
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -97,28 +97,35 @@ class CPU:
         while running:
             # ir: instruction register
             ir = self.ram_read(self.pc)
-            print('ir:', bin(ir))
-            num_operands = ir >> 6  # extract # of operands
 
-            if ir == self.LDI: # LDI R0,8
+            # extract operands
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            # update program counter
+            # look at first two bits of instruction
+            # if the command sets the PC directly, then don't
+            self.pc += 1 + (ir >> 6)
+
+            # if ir is an ALU command, send to ALU
+            is_alu_command = ((ir >> 5) & 0b001) == 1
+
+            if is_alu_command:
+                self.alu(ir, operand_a, operand_b)
+
+            # num_operands = ir >> 6  # extract # of operands
+
+            elif ir == self.LDI: # LDI R0,81
                 # put 8 in register 0
-                operand_a = self.ram_read(self.pc + 1)
-                operand_b = self.ram_read(self.pc + 2)
                 self.reg[operand_a] = operand_b
 
-            if ir == self.PRN: # PRN R0
+            elif ir == self.PRN: # PRN R0
                 # print register 0
-                operand_a = self.ram_read(self.pc + 1)
                 print(self.reg[operand_a])
-
-            if ir == self.MUL:
-                operand_a = self.ram_read(self.pc + 1)
-                operand_b = self.ram_read(self.pc + 2)
-                self.reg[operand_a] *= self.reg[operand_b]
 
             # Push the value in the given register on the stack.
             # sp: stack pointer
-            if ir == self.PUSH:
+            elif ir == self.PUSH:
                 # decrement stack pointer
                 self.reg[7] -= 1
                 # look ahead in ram to get given register number
@@ -131,7 +138,7 @@ class CPU:
 
             # Pop the value at the top of the stack into the given register
             # sp: stack pointer
-            if ir == self.POP:
+            elif ir == self.POP:
                 sp = self.reg[7]
                 # get value of last position of sp
                 popped_value = self.ram[sp]
@@ -143,7 +150,7 @@ class CPU:
                 self.reg[7] += 1
 
 
-            if ir == self.CALL:
+            elif ir == self.CALL:
                 # remember where to return to
                 ## get address of next instruction,
                 ## the one we would run if we didn't have CALL
@@ -167,7 +174,7 @@ class CPU:
                 self.pc = address_to_jump_to
                 
 
-            if ir == self.RET:
+            elif ir == self.RET:
                 # pop value from top of stack
                 ## use sp to get value
                 sp = self.reg[7]
@@ -179,13 +186,13 @@ class CPU:
                 self.pc = return_address
 
 
-            if ir == self.HLT:
+            elif ir == self.HLT:
                 running = False
 
 
             # bit shifting, bit masking
             command_sets_pc_directly = ((ir >> 4) & 0b0001) == 1
 
-            if not command_sets_pc_directly:
-                self.pc += num_operands + 1  # + 1 for the command itself
+            # if not command_sets_pc_directly:
+            #     self.pc += num_operands + 1  # + 1 for the command itself
 

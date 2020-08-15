@@ -10,6 +10,7 @@ PUSH = 0b01000101
 POP  = 0b01000110
 CALL = 0b01010000
 RET  = 0b00010001
+ADD  = 0b10100000 
 
 
 class CPU:
@@ -22,7 +23,10 @@ class CPU:
         self.ram = [None] * 256
 
         self.reg = [None] * 8
+
+        # stack pointer
         self.reg[7] = 0xF4
+
         # pc: program counter
         self.pc = 0
         self.running = True
@@ -31,6 +35,10 @@ class CPU:
         self.branchtable[HLT] = self.hlt
         self.branchtable[LDI] = self.ldi
         self.branchtable[PRN] = self.prn
+        self.branchtable[PUSH] = self.push
+        self.branchtable[POP] = self.pop
+        self.branchtable[CALL] = self.call
+        self.branchtable[RET] = self.ret
 
     def hlt(self, _, __):
         self.running = False
@@ -47,65 +55,60 @@ class CPU:
         print(self.reg[operand_a])
 
 
-    # def push(self):
-    #     # Push the value in the given register on the stack.
-    #     # sp: stack pointer
-    #     # decrement stack pointer
-    #     self.reg[7] -= 1
-    #     # look ahead in ram to get given register number
-    #     register_number = self.ram_read(self.pc + 1)
-    #     # get value from register 
-    #     number_to_push = self.reg[register_number]
-    #     # copy into stack
-    #     sp = self.reg[7]
-    #     self.ram[sp] = number_to_push
+    def push(self, operand_a, _):
+        # Push the value in the given register on the stack.
+        # sp: stack pointer
+        # decrement stack pointer
+        # look ahead in ram to get given register number
+        # get value from register 
+        # copy into stack
+        self.reg[7] -= 1
+        sp = self.reg[7]
+
+        # operand_a is address of register holding the value
+        value = self.reg[operand_a]
+
+        # put into memory
+        self.ram[sp] = value
+
+        # shorter version
+        # self.ram[sp] = self.reg[operand_a]
 
 
-    # def pop(self):
-    #     # Pop the value at the top of the stack into the given register
-    #     # sp: stack pointer
-    #     sp = self.reg[7]
-    #     # get value of last position of sp
-    #     popped_value = self.ram[sp]
-    #     # get register number
-    #     register_number = self.ram[self.pc + 1]
-    #     # copy into the register
-    #     self.reg[register_number] = popped_value
-    #     # increment sp
-    #     self.reg[7] += 1
+    def pop(self, operand_a, _):
+        # Pop the value at the top of the stack into the given register
+        # sp: stack pointer
+        # get value of last position of sp
+        sp = self.reg[7]
+        value = self.ram[sp]
+        # copy into the register
+        self.reg[operand_a] = value
+        # increment sp
+        self.reg[7] += 1
 
 
-    # def call(self):
-    #     # remember where to return to
-    #     ## get address of next instruction,
-    #     ## the one we would run if we didn't have CALL
-    #     ## It's at pc + 2
-    #     next_instruction_address = self.ram[self.pc + 2]
-    #     ## push onto the stack
-    #     ### decrement stack pointer sp
-    #     self.reg[7] -= 1
-    #     ### put on stack at the sp
-    #     sp = self.reg[7]
-    #     self.ram[sp] = next_instruction_address
-    #     # call the subroutine (function)
-    #     ## get address from given register
-    #     ### get the register number
-    #     reg_address = self.ram[self.pc + 1]
-    #     ### look inside that register
-    #     address_to_jump_to = self.reg[reg_address]
-    #     ## set pc to that address
-    #     self.pc = address_to_jump_to
-        
+    def call(self, operand_a, _):
+        # decrement sp
+        self.reg[7] -= 1
+        sp = self.reg[7]
+        # get address for RET
+        return_address = self.pc + 2
+        # put in memory
+        self.ram[sp] = return_address
 
-    # # pop value from top of stack
-    # def ret(self):
-    #     ## use sp to get value
-    #     sp = self.reg[7]
-    #     return_address = self.ram[sp]
-    #     ## increment sp
-    #     self.reg[7] += 1
-    #     # set pc to that value
-    #     self.pc = return_address
+        destination_address = self.reg[operand_a]
+        self.pc = destination_address
+
+
+    # pop value from top of stack
+    def ret(self, _, __):
+        # pop from stack
+        sp = self.reg[7]
+        value = self.ram[sp]
+        # set pc to value popped from stack
+        self.pc = value
+        # increment sp
+        self.reg[7] += 1
 
 
     # accept the address to read and return the value stored there
@@ -151,9 +154,11 @@ class CPU:
 
         if op == MUL:
             self.reg[reg_a] *= self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == ADD:
+            self.reg[reg_a] += self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
+
 
     def trace(self):
         """
@@ -189,7 +194,10 @@ class CPU:
             # update program counter
             # look at first two bits of instruction
             # if the command sets the PC directly, then don't
-            self.pc += 1 + (ir >> 6)
+            sets_pc_directly = (ir >> 4) & 0b0001
+
+            if not sets_pc_directly:
+                self.pc += 1 + (ir >> 6)
 
             # if ir is an ALU command, send to ALU
             is_alu_command = ((ir >> 5) & 0b001) == 1
@@ -199,14 +207,4 @@ class CPU:
 
             else:
                 self.branchtable[ir](operand_a, operand_b)
-
-            # num_operands = ir >> 6  # extract # of operands
-
-
-
-            # bit shifting, bit masking
-            command_sets_pc_directly = ((ir >> 4) & 0b0001) == 1
-
-            # if not command_sets_pc_directly:
-            #     self.pc += num_operands + 1  # + 1 for the command itself
 
